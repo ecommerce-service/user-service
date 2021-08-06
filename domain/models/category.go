@@ -72,18 +72,29 @@ func (model *Category) DeletedAt() sql.NullTime {
 	return model.deletedAt
 }
 
-func (model *Category) SetDeletedAt(deletedAt sql.NullTime) *Category {
-	model.deletedAt = deletedAt
+func (model *Category) SetDeletedAt(deletedAt time.Time) *Category {
+	model.deletedAt.Time = deletedAt
 
 	return model
 }
 
 const (
-	CategorySelectStatement = `SELECT id,name,slug FROM categories`
+	CategorySelectStatement       = `SELECT id,name,slug FROM categories`
+	CategorySelectCountStatement  = `SELECT count(id) FROM categories`
+	CategoryDefaultWhereStatement = `WHERE deleted_at IS NULL`
 )
 
-func (model *Category) ScanRows(rows *sql.Rows) (*Category, error) {
-	err := rows.Scan(&model.id, &model.name)
+func (model *Category) ScanRows(rows *sql.Rows) (interface{}, error) {
+	err := rows.Scan(&model.id, &model.name, &model.slug)
+	if err != nil {
+		return model, err
+	}
+
+	return model, nil
+}
+
+func (model *Category) ScanRow(row *sql.Row) (interface{}, error) {
+	err := row.Scan(&model.id, &model.name, &model.slug)
 	if err != nil {
 		return model, err
 	}
